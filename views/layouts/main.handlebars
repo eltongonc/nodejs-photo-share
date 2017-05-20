@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Photo share</title>
+
+    {{#if ENV_DEVELOPMENT}}
+    <script src="http://localhost:35729/livereload.js"></script>
+    {{/if}}
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css?family=Abril+Fatface|Open+Sans" rel="stylesheet">
+
+    <!-- Custom style -->
+    <link rel="stylesheet" href="/css/style.css">
+
+</head>
+<body>
+
+
+    {{{body}}}
+
+    <!-- api requests -->
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <!-- Socket.io required-->
+    <script src="/socket.io/socket.io.js"></script>
+    <!-- D3 -->
+    <!-- <script src="http://d3js.org/d3.v3.min.js"></script> -->
+    <!-- Fabric -->
+    <!-- <script src="http://cdnjs.cloudflare.com/ajax/libs/fabric.js/1.7.11/fabric.min.js"></script> -->
+
+    <!-- Custom functionality -->
+    <!-- <script src="/js/p5js-version.js"></script> -->
+    <script src="/js/script2.js"></script>
+    <!-- <script src="/js/Player.js"></script> -->
+    <!-- <script src="/js/Game.js"></script> -->
+</body>
+</html>
