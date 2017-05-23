@@ -1,6 +1,8 @@
 var express = require('express');
 var axios = require('axios');
 var Trello = require("node-trello");
+var http = require('http');
+
 
 var router = express.Router();
 var client = {
@@ -22,7 +24,6 @@ router.get("/", function (req, res) {
 });
 
 router.get("/main", function (req, res) {
-    // Start socket
     if (oauth_secrets.token) {
         var token = oauth_secrets.token
         var trello = new Trello(client.key, client.token);

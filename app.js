@@ -5,10 +5,7 @@ var express = require('express'),
     bodyParser = require('body-parser'),
     exphbs  = require('express-handlebars'), // templating engine
     http = require('http'),
-    socketIO = require('socket.io'), // websockets
-    axios = require('axios'), // a better api calls
-    stringDiff = require('diff'); //checks diffs of elements
-    fs = require('fs');
+    socketIO = require('socket.io') // websockets
 
 var routes = require('./routes/index');
 
@@ -60,134 +57,9 @@ app.use(function(err, req, res, next) {
     });
 });
 
-// api credentials
-var api = {
-    appName: "Real time web",
-    scope: 'scope=read%2Cwrite%2Caccount',
-    callbackURL: 'return_url=http://localhost:3000/callback',
-    method: 'callback_method=fragment',
-    key: process.env.TRELLO_KEY,
-    secret: process.env.TRELLO_OAUTH_SECRET,
-};
-var idList = "591efb7d570cadac0b06f3ea";
-var idBoard = "591eea3ee00e7d3abf0787da";
 
-// Start socket
-var allUsers = [];
-var bodyData;
-io.on('connection', function(client){
-    var token = app.token
-    var trello = app.trello;
-
-    // Listens to whenever an images is dropped
-    client.on('images dropped', (files, index)=>{
-        client.broadcast.emit('new images', files,index );
-    })
-    // Listens to whenever an images is being dragged
-    client.on('img update', (element, Y,X)=>{
-        client.broadcast.emit('new position', element, Y,X );
-    })
-
-    // load backup from trello
-    client.on('load body', loadBody)
-    // save backup to trello
-    client.on('save body', autosave)
-    // make a backup of the body when an user disconnects
-    client.on('disconnect', ()=>{
-        console.log("96:disconnected", bodyData);
-        autosave(bodyData)
-    })
-
-    function autosave(body){
-        console.log("101:autosaved");
-        if (bodyData) {
-            var newBody = stringDiff(bodyData,body)
-            bodyData = newBody;
-            saveBody(bodyData);
-        }else {
-            saveBody(body)
-        }
-    }
-    function stringDiff(stringA, stringB) {
-        var diff = stringB.indexOf(stringA)
-        var length = stringA.length;
-        var newBody;
-
-        if(diff == 0){
-            newBody = stringB.substring(length);
-        }else{
-            newBody = stringB.substring(0, diff);
-            newBody += stringB.substring(diff + length);
-        }
-        return newBody;
-    }
-    function loadBody(){
-        if (token && trello) {
-            var url = `https://api.trello.com/1/lists/${idList}/cards`;
-            axios.get(url,{
-                key:api.key,
-            }).then(response=>{
-                // update the card if it already exists
-                var cards = response.data;
-                var filteredCards = cards.filter(card=>card.name.match(/Body/))
-                if (filteredCards.length >= 1) {
-                    var url = `https://api.trello.com/1/cards/${filteredCards[0].id}`;
-                    // experimental: Set the body of the page to what is saved on trello.
-                    axios.get(url, {
-                        key:api.key,
-                        token: token,
-                    }).then(res=>{
-                        var card = res.data;
-                        io.sockets.emit('update body', card.desc );
-                        bodyData = card.desc;
-                    }).catch(err=>{if (err)throw err});
-                }
-            }).catch(err=>{if (err)throw err});
-        }
-    }
-
-    function saveBody(body){
-        fs.writeFile("./public/html/body.html", body, function(err) {
-            if(err) {
-                return console.log(err);
-            }
-
-            console.log("The file was saved!");
-        });
-        if (token && trello) {
-            var url = `https://api.trello.com/1/lists/${idList}/cards`;
-            axios.get(url,{
-                key:api.key,
-            }).then(response=>{
-                var cards = response.data;
-                var filteredCards = cards.filter(card=>card.name.match(/Body/))
-                if (filteredCards.length >= 1) {
-                    // update the card if it exists
-                    var url = `https://api.trello.com/1/cards/${filteredCards[0].id}`;
-                    axios.delete(url, {
-                        key:api.key,
-                        token: token,
-                    }).catch(err=>{if (err)throw err});
-                    // update the body for the remaining users
-                    // loadBody()
-
-                }
-                    // create new card if it doesn't exist
-                    var url = `https://api.trello.com/1/cards`;
-                    axios.post(url, {
-                        key:api.key,
-                        token: token,
-                        name: "Body"+client.id,
-                        desc: "test",
-                        urlSource: "http://localhost:3000/html/body.html",
-                        pos: "top",
-                        due: null,
-                        idList: "591efb7d570cadac0b06f3ea"
-                    }).catch(err=>{if (err)throw err});
-            }).catch(err=>{if (err)throw err});
-        }
-    }
-});
+// socket events
+var socketsEvets = require('./socketEvents.js')(io, app.token, app.trello);
 
 
 // Start app

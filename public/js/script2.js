@@ -1,5 +1,140 @@
 var socket = io();
-var index = 0;
+
+/******************
+** Trello api fix
+******************/
+if (location.hash.match(/#token=/)) {
+    axios.post(location.origin+'/login',{
+        token: location.hash.replace("#token=","")
+    }).then(function(response){
+        setTimeout(function(){
+            window.location.replace(location.origin+'/main')
+        },1000)
+    })
+    .catch(function(err){
+        if (err) throw err
+    })
+}
+
+/*****************
+** Canvas
+*****************/
+var colors = {
+    red: "#F2898B",
+    green: "#B9E1EC",
+}
+// use fabric to generate a wrapper around the canvas element.
+var canvas = new fabric.Canvas('canvas-container',{
+    width : window.innerWidth,
+    height : window.innerHeight - 50,
+    background : colors.green,
+    selection: false
+});
+
+/****************************
+** get all files from canvas
+****************************/
+fabric.Canvas.prototype.getItemsById = function(id) {
+  var objectList = {},
+      objects = this.getObjects();
+
+  for (var i = 0, len = this.size(); i < len; i++) {
+    if (objects[i].id && objects[i].id === id) {
+      objectList = objects[i];
+    }
+  }
+  return objectList;
+};
+
+/*****************
+** edit image
+*****************/
+var placeholderId = {}
+  canvas.on({
+    'object:moving': function(e) {
+        console.log(e.target);
+        e.target.opacity = 0.5;
+        e.target.selectable = false
+        canvas.forEachObject(function(obj) {
+            if (obj.id && obj.id === e.target.id) {
+                obj.set('selectable', false)
+            }
+        });
+        // dragg on all clients
+        socket.emit('img moving',  e.target.id, e.target)
+    },
+    'object:scaling': function(e) {
+        console.log(e.target);
+        // dragg on all clients
+        socket.emit('img moving',  e.target.id, e.target)
+    },
+    'object:modified': function(e) {
+        console.log(e.target);
+        e.target.opacity = 1;
+
+        e.target.selectable = true
+        // make all objects selectable
+        canvas.forEachObject(function(obj) {
+            obj.set('selectable', true)
+        });
+
+        socket.emit('img moving',  e.target.id, e.target)
+    }
+  });
+
+  socket.on('new position', function(item){
+    canvas.forEachObject(function(obj) {
+        if (obj.id && obj.id === item.id) {
+            for (var x in item) {
+                obj[x] = item[x];
+            }
+        }
+    });
+    canvas.renderAll()
+  });
+
+/*****************
+** upload files
+*****************/
+document.getElementById("upload").addEventListener("change",handleChange);
+
+// file upload handler
+function handleChange(e){
+    var file = e.target.files[0];
+    var reader = new FileReader();
+    reader.onload = function (f) {
+        var data = f.target.result;
+        addToCanvas(data)
+    };
+    reader.readAsDataURL(file);
+}
+// creates an fabric img and adds it to the canvas
+function addToCanvas(item){
+    fabric.Image.fromURL(item, function (img) {
+        var oImg = img.set({left: 0, top: 0, angle: 00}).scale(0.9);
+        socket.emit('img uploaded', img, socket.id)
+    });
+}
+
+function broadcastImage(item){
+    var img = document.createElement("img");
+    img.onload = function(){
+       var fImg = new fabric.Image(img, {
+           width: item.width,
+           id: item.id,
+           height: item.height,
+           skewX: item.skewX,
+           skewY: item.skewY,
+           left: item.left,
+           top: item.top,
+           angle: item.angle,
+           scaleX: item.scaleX,
+           scaleY: item.scaleY
+       });
+       canvas.add(fImg).renderAll();
+    }
+    img.src = item.src
+}
 
 
 /******************
@@ -77,23 +212,14 @@ function takeScreenshot(exports) {
 var screenshotBtn = document.getElementById('screenshot')
 if (screenshotBtn) {
     screenshotBtn.addEventListener('click',function(){
-        takeScreenshot(window)
+        socket.emit('take screenshot')
     })
 }
+
+
 /******************
 ** Socket events
 ******************/
-// if (location.path === "/main") {
-// }
-socket.on('new position', function(element, Y,X){
-    var img = document.getElementById(element);
-    console.log(img);
-    img.style.marginTop = Y+"px";
-    img.style.marginLeft = X+"px";
-    console.log("x:",X)
-    console.log("y:",Y);
-});
-
 socket.on('new images', function(imgSrc, i){
     console.log(i);
     var img = document.createElement("img");
@@ -110,136 +236,25 @@ socket.on('update body', function(newBody){
     document.body.innerHTML = newBody
 })
 
+socket.on('uploaded', function(data){
+    console.log(data);
+    broadcastImage(data)
+})
 socket.on('connect', function(){
     socket.emit('load body')
 })
 
 socket.on('disconnect', function(){
     console.log("disconnect");
-    socket.emit('save body',document.body.outerHTML.replace(/\n|\t/g, ' ')
-)
+    socket.emit('save canvas')
 })
 // save on leave
 socket.on('user left', function(){
-    socket.emit('save body',document.body.outerHTML.replace(/\n|\t/g, ' '))
+    socket.emit('save canvas')
 })
 
 // autosave the body every ten seconds
-setInterval(function(){
-    console.log("autosaved", document.body.outerHTML);
-    socket.emit('save body', document.body.outerHTML.replace(/\n|\t/g, ' '))
-},10000)
-/******************
-** Trello api fix
-******************/
-if (location.hash.match(/#token=/)) {
-    axios.post(location.origin+'/login',{
-        token: location.hash.replace("#token=","")
-    }).then(function(response){
-        setTimeout(function(){
-            window.location.replace('/main')
-        },1000)
-    })
-    .catch(function(err){
-        if (err) throw err
-    })
-}
-/******************
-** Drag movements
-******************/
-// currently draggin element
-var draggingElement;
-// run this code when fully loaded
-window.addEventListener('load',function(){
-    // add drag event to all images
-    var imgs = document.querySelectorAll("img");
-    for (var i = 0; i < imgs.length; i++) {
-        imgs[i].addEventListener('mousedown',startDragging);
-    }
-    // add drag event to the body
-    var body = document.querySelector("body")
-    body.addEventListener('mousemove',dragging);
-    body.addEventListener('mouseup',doneDragging);
-});
-
-// set this image as the current one to be dragged
-function startDragging(e){
-    draggingElement = this;
-}
-
-function dragging(e){
-    if (draggingElement == null)
-    return false;
-    // calculate coordinates based of its size
-    var Y = e.pageY - (e.target.width/2);
-    var X = e.pageX - (e.target.height/2);
-    console.log(draggingElement);
-    socket.emit('img update', e.target.id, Y,X);
-    // set coordinates
-    draggingElement.style.marginTop = Y+"px";
-    draggingElement.style.marginLeft = X+"px";
-
-}
-
-function doneDragging(e){
-    // unset the image that's being dragged
-    draggingElement = null;
-}
-
-/*******************
-** Drag&Drop images
-********************/
-document.body.addEventListener('dragover', cancel, false);
-document.body.addEventListener('dragenter', cancel, false);
-document.body.addEventListener('drop', droppedImage, false);
-function cancel(e) {
-    if (e.preventDefault) { e.preventDefault(); }
-    return false;
-}
-
-function droppedImage(e){
-    e.preventDefault();
-    var dt = e.dataTransfer;
-    var files = dt.files;
-    generateImages(files);
-    return false;
-}
-
-function generateImages(files) {
-    if (typeof files === "string") {
-        console.log(JSON.parse(files))
-    }
-    console.log(files);
-    for (var i=0; i<files.length; i++) {
-        var file = files[i];
-        var reader = new FileReader();
-        //attach event handlers here...
-        reader.readAsDataURL(file);
-        // src: http://stackoverflow.com/questions/33923985/parameter-is-not-of-type-blob
-        reader.addEventListener('loadend', function(e, file) {
-            var bin = this.result;
-            var img = document.createElement("img");
-            // img.file = file;
-            img.src = bin;
-            img.id = "img_"+index;
-            document.body.firstChild.appendChild(img);
-            img.setAttribute("draggable", "false");
-            // attach the mousedown event to all image tags
-            img.addEventListener('mousedown',startDragging);
-            socket.emit('images dropped', JSON.stringify(bin),index);
-            index+=1;
-
-
-        }.bindToEventHandler(file), false);
-    }
-}
-Function.prototype.bindToEventHandler = function bindToEventHandler() {
-    var handler = this;
-    var boundParameters = Array.prototype.slice.call(arguments);
-    //create closure
-    return function(e) {
-        e = e || window.event; // get window.event if e argument missing (in IE)
-        boundParameters.unshift(e);
-        handler.apply(this, boundParameters);
-    }
-};
+// setInterval(function(){
+//     console.log("autosaved");
+//     socket.emit('save canvas',canvas.toDataURL())
+// },10000)
