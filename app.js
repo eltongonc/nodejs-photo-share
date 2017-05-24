@@ -238,7 +238,7 @@ function saveCanvas(canvasImg){
 
                 // update the card if it exists
                 var url = `https://api.trello.com/1/cards/${filteredCards[0].id}`;
-                axios.post(url, {
+                axios.put(url, {
                     key:api.key,
                     token: token,
                     urlSource: canvasImg,
