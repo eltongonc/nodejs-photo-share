@@ -33,6 +33,23 @@ h1 {
 /**************
 ** Page view
 **************/
+section.page {
+  background-color: #B9E1EC;
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center; }
+  section.page div {
+    background-color: white;
+    width: 40em;
+    height: 20em;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center; }
+
 section.main {
   background-color: #B9E1EC;
   width: 100%;
@@ -153,3 +170,21 @@ img {
   opacity: 0;
   position: absolute;
   left: -99999em; }
+
+.notification {
+  transition: .3s;
+  position: absolute;
+  background-color: #F2898B;
+  transition: .3s;
+  width: 100%;
+  height: 5.2em;
+  z-index: 999;
+  color: white;
+  padding: 0.5em;
+  animation: 4s blink infinite ease-in-out; }
+
+@keyframes blink {
+  0%, 90%, 100% {
+    opacity: 1; }
+  50%, 60% {
+    opacity: 0.5; } }

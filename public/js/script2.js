@@ -112,7 +112,7 @@ function handleChange(e){
 function addToCanvas(item){
     fabric.Image.fromURL(item, function (img) {
         var oImg = img.set({left: 0, top: 0, angle: 00}).scale(0.9);
-        socket.emit('img uploaded', img, socket.id)
+        socket.emit('img uploaded', img, canvas.toJSON())
     });
 }
 
@@ -140,82 +140,16 @@ function broadcastImage(item){
 /******************
 ** screenshot
 ******************/
-// src: http://www.xpertdeveloper.com/2012/10/webpage-screenshot-with-html5-js/
-function takeScreenshot(exports) {
-    function urlsToAbsolute(nodeList) {
-        if (!nodeList.length) {
-            return [];
-        }
-        var attrName = 'href';
-        if (nodeList[0].__proto__ === HTMLImageElement.prototype
-        || nodeList[0].__proto__ === HTMLScriptElement.prototype) {
-            attrName = 'src';
-        }
-        nodeList = [].map.call(nodeList, function (el, i) {
-            var attr = el.getAttribute(attrName);
-            if (!attr) {
-                return;
-            }
-            var absURL = /^(https?|data):/i.test(attr);
-            if (absURL) {
-                return el;
-            } else {
-                return el;
-            }
-        });
-        return nodeList;
-    }
-
-    function screenshotPage() {
-        urlsToAbsolute(document.images);
-        urlsToAbsolute(document.querySelectorAll("link[rel='stylesheet']"));
-        var screenshot = document.documentElement.cloneNode(true);
-        var b = document.createElement('base');
-        b.href = document.location.protocol + '//' + location.host;
-        var head = screenshot.querySelector('head');
-        head.insertBefore(b, head.firstChild);
-        screenshot.style.pointerEvents = 'none';
-        screenshot.style.overflow = 'hidden';
-        screenshot.style.webkitUserSelect = 'none';
-        screenshot.style.mozUserSelect = 'none';
-        screenshot.style.msUserSelect = 'none';
-        screenshot.style.oUserSelect = 'none';
-        screenshot.style.userSelect = 'none';
-        screenshot.dataset.scrollX = window.scrollX;
-        screenshot.dataset.scrollY = window.scrollY;
-        var script = document.createElement('script');
-        script.textContent = '(' + addOnPageLoad_.toString() + ')();';
-        screenshot.querySelector('body').appendChild(script);
-        var blob = new Blob([screenshot.outerHTML], {
-            type: 'text/html'
-        });
-        return blob;
-    }
-
-    function addOnPageLoad_() {
-        window.addEventListener('DOMContentLoaded', function (e) {
-            var scrollX = document.documentElement.dataset.scrollX || 0;
-            var scrollY = document.documentElement.dataset.scrollY || 0;
-            window.scrollTo(scrollX, scrollY);
-        });
-    }
-
-    function generate() {
-        window.URL = window.URL || window.webkitURL;
-        window.open(window.URL.createObjectURL(screenshotPage()));
-    }
-    exports.screenshotPage = screenshotPage;
-    exports.generate = generate;
-    generate();
-}
-
 var screenshotBtn = document.getElementById('screenshot')
 if (screenshotBtn) {
     screenshotBtn.addEventListener('click',function(){
-        socket.emit('take screenshot')
+        socket.emit('take screenshot', canvas.toDataURL())
     })
 }
 
+socket.on('screenshot taken', function(imgLink){
+    alert("screenshot taken and saved at "+ imgLink)
+})
 
 /******************
 ** Socket events
@@ -231,30 +165,47 @@ socket.on('new images', function(imgSrc, i){
     img.addEventListener('mousedown',startDragging);
 })
 
-socket.on('update body', function(newBody){
-    console.log(newBody);
-    document.body.innerHTML = newBody
+socket.on('update canvas', function(newCanvas){
+    for (var i = 0; i < newCanvas.length; i++) {
+        newCanvas[i]
+    }
+    canvas.renderAll();
 })
 
 socket.on('uploaded', function(data){
     console.log(data);
     broadcastImage(data)
 })
-socket.on('connect', function(){
-    socket.emit('load body')
-})
 
-socket.on('disconnect', function(){
-    console.log("disconnect");
-    socket.emit('save canvas')
-})
-// save on leave
-socket.on('user left', function(){
-    socket.emit('save canvas')
-})
+
+/******************
+** polling
+******************/
+socket.on('connect', function() {
+    console.log("connected");
+    socket.emit('load canvas')
+
+    var notification = document.querySelectorAll('.notification');
+    if (notification.length > 0) {
+        for (var i = 0; i < notification.length; i++) {
+            notification[i].remove()
+        }
+    }
+});
+
+socket.on('disconnect', function() {
+  console.log('disconnected');
+  socket.emit('save canvas')
+  var notification =
+  `<div class="notification">
+    <h3>The connection with the server has been lost. Trying to reconnect</h3>
+  </div>`
+
+  document.body.insertAdjacentHTML('afterbegin', notification);
+});
 
 // autosave the body every ten seconds
 // setInterval(function(){
-//     console.log("autosaved");
-//     socket.emit('save canvas',canvas.toDataURL())
+//     console.log("autosaved", canvas.toJSON());
+//     socket.emit('save canvas',canvas.toJSON())
 // },10000)

@@ -48,5 +48,9 @@ router.post("/login", function (req, res) {
     res.send('test');
 });
 
+router.get('/ping', function(req, res) {
+    res.send('pong');
+});
+
 
 module.exports = router;
