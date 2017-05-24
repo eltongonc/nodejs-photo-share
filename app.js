@@ -142,7 +142,6 @@ client.on('load canvas', loadCanvas)
 client.on('save canvas', saveCanvas)
 
 // make a backup of the body when an user disconnects
-
 client.on('disconnect', ()=>{
     console.log("disconnected");
     saveCanvas(imgLink)
@@ -199,13 +198,11 @@ function saveCanvas(canvasImg){
             if (filteredCards.length >= 1) {
 
                 // update the card if it exists
-                var url = `https://api.trello.com/1/cards/${filteredCards[0].id}/attachments`;
+                var url = `https://api.trello.com/1/cards/${filteredCards[0].id}`;
                 axios.post(url, {
                     key:api.key,
                     token: token,
-                    name: "canvas.png",
-                    file: canvasImg,
-                    mimeType: "png",
+                    urlSource: canvasImg,
                 }).catch(err=>{if (err)throw err});
                 // update the body for the remaining users
                 // loadCanvas()

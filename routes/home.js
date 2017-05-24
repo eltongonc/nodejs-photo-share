@@ -3,7 +3,6 @@ var axios = require('axios');
 var Trello = require("node-trello");
 var http = require('http');
 
-
 var router = express.Router();
 var client = {
     appName: "Real time web",
@@ -18,7 +17,6 @@ var oauth_secrets = {};
 /******************
 *** Home route.
 *****************/
-
 router.get("/", function (req, res) {
     res.render("index", {trelloUrl});
 });

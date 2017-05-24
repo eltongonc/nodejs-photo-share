@@ -77,7 +77,6 @@ var placeholderId = {}
         canvas.forEachObject(function(obj) {
             obj.set('selectable', true)
         });
-
         socket.emit('img moving',  e.target.id, e.target)
     }
   });
@@ -149,6 +148,7 @@ if (screenshotBtn) {
 
 socket.on('screenshot taken', function(imgLink){
     alert("screenshot taken and saved at "+ imgLink)
+    socket.emit('save canvas', imgLink)
 })
 
 /******************
