@@ -4,10 +4,11 @@ var Trello = require("node-trello");
 var http = require('http');
 
 var router = express.Router();
+var host = process.env.HOST || 'https://real-time-moodboard.herokuapp.com';
 var client = {
     appName: "Real time web",
     scope: 'scope=read%2Cwrite%2Caccount',
-    callbackURL: 'return_url=https://real-time-moodboard.herokuapp.com/callback',
+    callbackURL: 'return_url='+host+'/callback',
     method: 'callback_method=fragment',
     key: process.env.TRELLO_KEY,
     secret: process.env.TRELLO_OAUTH_SECRET,

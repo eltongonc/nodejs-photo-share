@@ -61,10 +61,11 @@ app.use(function(err, req, res, next) {
 });
 
 // api credentials
+var host = process.env.HOST || 'https://real-time-moodboard.herokuapp.com';
 var api = {
     appName: "Real time web",
     scope: 'scope=read%2Cwrite%2Caccount',
-    callbackURL: 'return_url=https://real-time-moodboard.herokuapp.com/callback',
+    callbackURL: 'return_url='+host+'/callback',
     method: 'callback_method=fragment',
     key: process.env.TRELLO_KEY,
     secret: process.env.TRELLO_OAUTH_SECRET,
@@ -75,7 +76,7 @@ var idList = "591efb7d570cadac0b06f3ea";
 
 var index = 0;
 var allUsers = [];
-var imgLink = "https://real-time-moodboard.herokuapp.com/img/canvas.jpeg";
+var imgLink = host+"/img/canvas.jpeg";
 
 
 // socket events
@@ -84,6 +85,32 @@ io.on('connection', function(client){
     var token = app.token;
     var trello = app.trello;
     console.log("new connection", client.id);
+    /******************
+    ** users
+    ******************/
+    // New user
+    client.on('new user', function(name){
+        // add a user to the database if it's an unique name
+        if(isUniqueUser(name)){
+            allUsers.push({name, id: client.id});
+            updateUsers(client,{name,id:client.id},'has joined the party');
+        }else{
+            updateUsers(client,null,'Name already taken');
+        }
+        console.log(allUsers);
+    });
+
+    // Whenever a user shuts down the browser
+    client.on('disconnect', function(){
+        // Get the data of the current leaving user and update the list of users
+        var leavingUser = checkCurrentUser(client.id);
+        if (leavingUser) {
+            updateUsers(io,leavingUser[0],'has left the party');
+            // Remove leavingUser from list
+            allUsers.splice(allUsers.indexOf(leavingUser),1);
+        }
+    });
+
 /******************
 ** images
 ******************/
@@ -144,6 +171,13 @@ client.on('save canvas', saveCanvas)
 // make a backup of the body when an user disconnects
 client.on('disconnect', ()=>{
     console.log("disconnected");
+    // Get the data of the current leaving user and update the list of users
+    var leavingUser = checkCurrentUser(client.id);
+    if (leavingUser) {
+        updateUsers(io,leavingUser[0],'has left the party');
+        // Remove leavingUser from list
+        allUsers.splice(allUsers.indexOf(leavingUser),1);
+    }
     saveCanvas(imgLink)
     // allUsers.splice(allUsers.indexOf(client.id),1);
 })
@@ -152,17 +186,22 @@ client.on('disconnect', ()=>{
 /******************
 ** funtions
 ******************/
-function newUser(id, name){
-    allUsers = allUsers.reduce(function(total, user){
-        if (user.id === id) {
-            return
-        }
-        return total.push({id,name})
-    },[])
+function checkCurrentUser(id){
+    var users = allUsers.filter(user=>{
+        if(user.id == id){ return user; }
+    });
+    return users;
 }
+
+function isUniqueUser(name){
+    // src: https://github.com/eltongonc/real-time_web/issues/4
+    return !allUsers.some(function (user) {
+        return user.name === name;
+    });
+}
+
 function loadCanvas(){
     console.log("loaded");
-    console.log(canvas);
     if (token && trello) {
         var url = `https://api.trello.com/1/lists/${idList}/cards`;
         axios.get(url,{
@@ -231,6 +270,9 @@ function takeScreenshot(data){
     client.emit('screenshot taken', imgLink)
 }
 
+function updateUsers(client, user, message){
+    client.emit('update users', user, allUsers, message);
+}
 
 
 })

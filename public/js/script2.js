@@ -183,6 +183,7 @@ socket.on('uploaded', function(data){
 ******************/
 socket.on('connect', function() {
     console.log("connected");
+    socket.emit('new user', prompt("What is your name"));
     socket.emit('load canvas')
 
     var notification = document.querySelectorAll('.notification');
