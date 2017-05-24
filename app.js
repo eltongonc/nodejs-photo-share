@@ -166,7 +166,9 @@ client.on('take screenshot', takeScreenshot)
 client.on('load canvas', loadCanvas)
 
 // save backup to trello
-client.on('save canvas', saveCanvas)
+client.on('save canvas', function(data){
+    saveCanvas(imgLink)
+})
 
 // make a backup of the body when an user disconnects
 client.on('disconnect', ()=>{
