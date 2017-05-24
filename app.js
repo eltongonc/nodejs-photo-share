@@ -64,7 +64,7 @@ app.use(function(err, req, res, next) {
 var api = {
     appName: "Real time web",
     scope: 'scope=read%2Cwrite%2Caccount',
-    callbackURL: 'return_url=http://localhost:3000/callback',
+    callbackURL: 'return_url=https://real-time-moodboard.herokuapp.com/callback',
     method: 'callback_method=fragment',
     key: process.env.TRELLO_KEY,
     secret: process.env.TRELLO_OAUTH_SECRET,
@@ -75,7 +75,7 @@ var idList = "591efb7d570cadac0b06f3ea";
 
 var index = 0;
 var allUsers = [];
-var imgLink = "http://localhost:5000/img/canvas.jpeg";
+var imgLink = "https://real-time-moodboard.herokuapp.com/img/canvas.jpeg";
 
 
 // socket events

@@ -8,7 +8,7 @@ var router = express.Router();
 var client = {
     appName: "Real time web",
     scope: 'scope=read%2Cwrite%2Caccount',
-    callbackURL: 'return_url=http://localhost:5000/callback',
+    callbackURL: 'return_url=https://real-time-moodboard.herokuapp.com/callback',
     method: 'callback_method=fragment',
     key: process.env.TRELLO_KEY,
     secret: process.env.TRELLO_OAUTH_SECRET,
