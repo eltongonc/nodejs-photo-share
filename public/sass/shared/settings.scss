@@ -1,0 +1,58 @@
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    height: 100%;
+    margin: 0;
+    box-sizing: border-box;
+    padding: 0;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: red;
+    @media (min-width: 50em){
+        flex-direction: row;
+    }
+}
+
+ul {
+    list-style: none;
+    padding: 0;
+}
+
+
+.hidden {
+    transition: 3s;
+    opacity: 0;
+    // visibility: hidden;
+    // display: none;
+    position: absolute;
+    left: -99999em;
+}
+
+
+.notification {
+    transition: .3s;
+    position: absolute;
+    background-color: $red;
+    transition: .3s;
+    width: 100%;
+    height: 5.2em;
+    z-index: 999;
+    color: white;
+    padding: 0.5em;
+    animation: 4s blink infinite ease-in-out
+}
+
+@keyframes blink {
+    0%,90%,100% {
+        opacity: 1
+    }50%,60% {
+        opacity: 0.5
+    }
+}

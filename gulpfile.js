@@ -8,7 +8,7 @@ var gulp = require('gulp'),
 var esConfig = require('./.eslintrc.js');
 
 gulp.task('sass', function () {
-    gulp.src('./public/css/*.scss')
+    gulp.src('./public/sass/*.scss')
     .pipe(plumber())
     .pipe(sass())
     .pipe(gulp.dest('./public/css'))
@@ -16,13 +16,13 @@ gulp.task('sass', function () {
 });
 
 gulp.task('watch', function() {
-    gulp.watch('./public/css/*.scss', ['sass']);
+    gulp.watch('./public/sass/*.scss', ['sass']);
 });
 
 gulp.task('develop', function () {
     livereload.listen();
     nodemon({
-        script: 'app.js',
+        script: './lib/app.js',
         ext: 'js handlebars coffee',
         stdout: false
     }).on('readable', function () {

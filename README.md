@@ -189,7 +189,7 @@ A live demo is available on [Heroku](https://real-time-moodboard.herokuapp.com/m
 - App may crash when dropping a large image onto the canvas
 - App has bugs when multiple users are connected
 - App is not mobile friendly
-- App sometimes, won't let you select a certain image.
+- App sometimes won't let you select a certain image.
 
 ## Sources
 - [Trello Api](https://developers.trello.com/advanced-reference)

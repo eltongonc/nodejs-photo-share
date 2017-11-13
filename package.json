@@ -6,8 +6,8 @@
   "repository": "https://github.com/eltongonc/real-time_web",
   "main": "app.js",
   "scripts": {
-    "start": "node app.js",
-    "dev": "gulp",
+    "start": "node ./lib/app.js",
+    "start:dev": "gulp",
     "dev:live": "ngrok http 5000",
     "lint": "gulp lint"
   },
@@ -45,6 +45,7 @@
     "gulp-plumber": "^1.0.0",
     "gulp-sass": "^3.0.0",
     "ngrok": "^2.2.6",
+    "nodemon": "1.12.1",
     "pre-commit": "^1.2.2"
   }
 }
