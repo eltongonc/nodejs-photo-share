@@ -1,0 +1,26 @@
+{
+    "window.zoomLevel": 0,
+    "terminal.integrated.shell.windows": "C:\\Program Files\\Git\\bin\\bash.exe",
+    "editor.multiCursorModifier": "ctrlCmd",
+    "editor.formatOnPaste": false,
+    "editor.fontSize": 18,
+    "editor.minimap.enabled": false,
+    "editor.fontFamily": "'Inconsolata', Consolas, 'Courier New', monospace",
+    "eslint.enable": true,
+    "eslint.trace.server": "messages",
+    "javascript.format.enable": false,
+    "prettier.eslintIntegration": true,
+    "explorer.confirmDragAndDrop": false,
+    // fonts
+    "grunt.autoDetect": "off",
+    "workbench.colorCustomizations": {
+        "editorIndentGuide.activeBackground": "#999999"
+    },
+    "liveServer.settings.donotShowInfoMsg": true,
+    "liveServer.settings.wait": 200,
+    "window.title": "${dirty} ${activeEditorShort} ${separator}${rootName}${separator}",
+    "workbench.statusBar.feedback.visible": false,
+    "workbench.tree.horizontalScrolling": true,
+    "search.smartCase": true,
+    "eslint.options": {"configFile": "C:/Users/elton/Projects/photo_share/.eslintrc.js" }
+}
