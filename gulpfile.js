@@ -1,55 +1,62 @@
-var gulp = require('gulp'),
-    nodemon = require('gulp-nodemon'),
-    plumber = require('gulp-plumber'),
-    livereload = require('gulp-livereload'),
-    sass = require('gulp-sass'),
-    eslint = require('gulp-eslint');
+const gulp = require('gulp');
+const nodemon = require('gulp-nodemon');
+const plumber = require('gulp-plumber');
+const livereload = require('gulp-livereload');
+const sass = require('gulp-sass');
+const eslint = require('gulp-eslint');
 
-var esConfig = require('./.eslintrc.js');
+const esConfig = require('./.eslintrc.js');
 
-gulp.task('sass', function () {
-    gulp.src('./public/sass/*.scss')
+/**
+ * Compile scss files to css
+ */
+gulp.task('sass', () => {
+  gulp.src('./public/sass/*.scss')
     .pipe(plumber())
     .pipe(sass())
     .pipe(gulp.dest('./public/css'))
     .pipe(livereload());
 });
 
-gulp.task('watch', function() {
-    gulp.watch('./public/sass/*.scss', ['sass']);
+/**
+ * Watch all scss files and compile them to css
+ */
+gulp.task('watch', () => {
+  gulp.watch('./public/css/*.scss', ['sass']);
 });
 
-gulp.task('develop', function () {
-    livereload.listen();
-    nodemon({
-        script: './lib/app.js',
-        ext: 'js handlebars coffee',
-        stdout: false
-    }).on('readable', function () {
-        this.stdout.on('data', function (chunk) {
-            if(/^Express server listening on port/.test(chunk)){
-                livereload.changed(__dirname);
-            }
-        });
-        this.stdout.pipe(process.stdout);
-        this.stderr.pipe(process.stderr);
+/**
+ * Build a live dev server
+ */
+gulp.task('develop', () => {
+  livereload.listen();
+  nodemon({
+    script: './lib/app.js',
+    ext: 'js handlebars coffee',
+    stdout: false
+  }).on('readable', function () {
+    this.stdout.on('data', (chunk) => {
+      if (/^Express server listening on port/.test(chunk)) {
+        livereload.changed(__dirname);
+      }
     });
+    this.stdout.pipe(process.stdout);
+    this.stderr.pipe(process.stderr);
+  });
 });
 
-
-gulp.task('lint', function() {
-    return gulp.src(['**/*.js','!node_modules/**'])
-    .pipe(eslint(esConfig))
-    // eslint.format() outputs the lint results to the console.
-    // Alternatively use eslint.formatEach() (see Docs).
-    .pipe(eslint.format())
-    // To have the process exit with an error code (1) on
-    // lint error, return the stream and pipe to failAfterError last.
-    .pipe(eslint.failAfterError());
+/**
+ * Lint the files
+ */
+gulp.task('lint', () => {
+  return gulp.src(['**/*.js','!node_modules/**'])
+  .pipe(eslint(esConfig))
+  .pipe(eslint.format())
+  .pipe(eslint.failAfterError());
 });
 
 gulp.task('default', [
-    'sass',
-    'develop',
-    'watch'
+  'sass',
+  'develop',
+  'watch'
 ]);
